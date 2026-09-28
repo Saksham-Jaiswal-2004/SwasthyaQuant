@@ -1,0 +1,58 @@
+# Base configuration for the 70,000-row cardiovascular dataset.
+#
+# All learned preprocessing and feature selection must happen inside
+# the training fold. This file defines the reproducible defaults.
+
+seed: 20260830
+
+data:
+  source: cardio_70000
+  raw_path: data/raw/cardio_train.csv
+  processed_path: data/processed/cardio_70000.parquet
+
+split:
+  n_splits: 5
+  n_repeats: 5
+  holdout_fraction: 0.2
+  stratify: true
+
+preprocess:
+  impute_strategy: median
+  scale: true
+  add_missing_indicators: true
+
+features:
+  set: cardio_compact8
+  reducer: none
+  n_components: 8
+  selector:
+    method: mi_mrmr
+    k: 8
+    redundancy_penalty: 0.5
+
+quantum:
+  n_qubits: 4
+  depth: 6
+  encoding: dense_angle
+  entangler: ring
+  shots: null
+  angle_scaler: fixed_clinical
+
+kernel:
+  reps: 2
+  entanglement: linear
+  C: 1.0
+  max_samples: 2000
+
+training:
+  epochs: 60
+  lr: 0.05
+  batch_size: 32
+  gradient_method: backprop
+
+report:
+  headline_metrics: [sensitivity, specificity]
+  primary_metric: pr_auc
+  decimals: 3
+  require_control: true
+  ledger: results/runs/ledger.csv

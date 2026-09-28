@@ -1,0 +1,20 @@
+# Variational classifier: 4 qubits, dense angle encoding, depth 6 -> 96 angles + 1 bias.
+#
+# Depth 6 is a ceiling, not a starting point. Deeper circuits are where barren plateaus
+# live: gradients vanish exponentially in the qubit count and training stalls at chance
+# with a perfectly flat, perfectly healthy-looking loss curve. If the loss does not move
+# in the first ten epochs, lower ansatz init scale before touching anything else.
+model:
+  name: vqc_dense
+  params:
+    n_qubits: 4
+    depth: 6
+    epochs: 60
+    lr: 0.05
+    batch_size: 32
+    entangler: ring
+    gradient_method: backprop
+  hardware_honest_cost:
+    rule: parameter-shift
+    evaluations_per_step_per_sample: 194   # 2 x 97 parameters
+    note: run once with gradient_method=parameter-shift so the cost is measured, not asserted

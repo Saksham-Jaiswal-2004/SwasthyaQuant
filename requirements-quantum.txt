@@ -1,0 +1,19 @@
+# Quantum + explainability + UI. Install once Week 1 is green.
+# Kept separate so a broken quantum install cannot block the baseline work.
+-r requirements.txt
+
+# models and training (PennyLane owns the variational path)
+pennylane>=0.36,<0.42
+torch>=2.2,<3
+
+# kernels, noise models, hardware (Qiskit owns the hardware path)
+qiskit>=1.1,<2
+qiskit-machine-learning>=0.7,<0.9
+qiskit-aer>=0.14,<0.18
+qiskit-ibm-runtime>=0.23,<0.42
+
+# explainability
+shap>=0.45,<0.50
+
+# demo
+streamlit>=1.35,<2

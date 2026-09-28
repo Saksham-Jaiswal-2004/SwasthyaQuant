@@ -1,0 +1,24 @@
+# Kaggle Heart Failure Prediction -- 918 rows, the project default.
+#
+# A merge of five UCI cohorts (Cleveland, Hungarian, Switzerland, Long Beach VA,
+# Stalog) with duplicates removed. Convenient and widely used, at one real cost: the
+# merge DROPPED the source-hospital column, so cross-cohort external validation is
+# impossible on this file. cohort_holdout() raises rather than pretending otherwise.
+# Subgroup analysis by sex and age band is the partial substitute -- see
+# docs/DECISIONS.md, ADR-003.
+
+data:
+  source: heart_kaggle918
+  raw_path: data/raw/heart.csv
+  n_rows_expected: 918
+  target_column: HeartDisease
+  has_severity: false
+  has_cohort: false
+
+known_defects:
+  sentinel_zero_cholesterol: ~172     # 0 means "not measured", not 0 mg/dl
+  sentinel_zero_resting_bp: 1
+  sex_imbalance: "~79% male; report sensitivity per sex or the disparity is invisible"
+
+split:
+  cohort_holdout: false                # unavailable; do not set true, it will raise

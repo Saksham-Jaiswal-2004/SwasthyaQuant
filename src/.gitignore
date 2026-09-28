@@ -1,0 +1,28 @@
+# data is never committed -- see data/DATA_CARD.md for how to obtain it
+data/raw/*
+data/interim/*
+data/processed/*
+!data/**/.gitkeep
+!data/DATA_CARD.md
+
+# results: keep the ledger, drop the heavy artefacts
+results/runs/*.csv
+results/figures/*
+!results/**/.gitkeep
+*.joblib
+*.pt
+*.pkl
+kernel_cache/
+
+# secrets
+.env
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/

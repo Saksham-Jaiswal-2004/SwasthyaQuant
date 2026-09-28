@@ -1,0 +1,25 @@
+# Raw UCI cohorts -- four files, ~920 rows, keeps severity AND source hospital.
+#
+# Use this when you want the two things the Kaggle merge threw away:
+#   * severity (UCI 'num', 0-4) for the ordinal/multiclass extension
+#   * cohort, which enables genuine leave-one-hospital-out external validation
+#
+# The price is messier data: Switzerland has cholesterol==0 for nearly every row and a
+# far higher prevalence, so a model can score well by identifying the hospital. That
+# is precisely why holding a cohort out is the strongest generalisation evidence
+# available -- and why it is worth the extra work if the schedule allows.
+
+data:
+  source: heart_uci_cohorts
+  raw_path: data/raw/uci
+  files:
+    - processed.cleveland.data
+    - processed.hungarian.data
+    - processed.switzerland.data
+    - processed.va.data
+  has_severity: true
+  has_cohort: true
+
+split:
+  cohort_holdout: true
+  holdout_cohort: switzerland    # the hardest shift: report it, do not tune on it

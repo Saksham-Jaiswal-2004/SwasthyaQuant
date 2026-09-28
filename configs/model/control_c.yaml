@@ -1,0 +1,27 @@
+# CONTROL-C -- the parameter-matched classical control. The project's actual contribution.
+#
+# Neither reference paper has one. Without it, "0.89 PR-AUC with 96 parameters" carries
+# no information, because nobody knows what a 96-parameter classical model would reach.
+#
+# target_params is read off the LIVE circuit at runtime, never hard-coded here. Change
+# the depth and the control resizes itself; hard-code it and the control silently stops
+# being matched the first time the circuit changes, while every number still looks fine.
+#
+# Integer hidden widths rarely hit 96 exactly (13h + 4 = 96 gives h = 7.08), so BOTH
+# brackets are run: h=7 -> 95 params, h=8 -> 108. If the quantum model beats the smaller
+# control and loses to the larger, the honest conclusion is that it is a wash -- and
+# reporting that is what makes everything else in the table credible.
+model:
+  name: control_c
+  params:
+    d_in: 8
+    d_out: 4              # matches the number of qubits, i.e. of expectation values
+    target_params: auto   # auto = count_circuit_params(n_qubits, depth).trainable
+    trainable: false      # mirror hybrid_extractor's trainable flag
+    run_both_brackets: true
+  activation: tanh        # bounded in [-1, 1] like PauliZ, so the shared head sees the
+                          # same scale from both sides
+  head:
+    kind: logistic_regression
+    max_iter: 2000
+    note: MUST be byte-identical to hybrid_extractor's head

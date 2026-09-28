@@ -1,0 +1,17 @@
+# ZZ fidelity kernel -> classical SVC.
+#
+# Cost is O(N^2) circuit evaluations and that is the binding constraint on the whole
+# project: 918 rows is ~421k evaluations, 20,000 rows would be ~2x10^8. The Gram matrix
+# is computed ONCE for all rows and sliced per fold, which is legitimate only because
+# the kernel uses no labels and the angle scaler is fixed rather than fitted.
+model:
+  name: qkernel_zz
+  params:
+    n_qubits: 4
+    reps: 2
+    entanglement: linear
+    shots: null
+    C: 1.0
+    max_samples: 2000
+  requires:
+    angle_scaler: fixed_clinical    # switch to minmax_fold and you MUST disable the cache

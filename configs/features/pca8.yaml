@@ -1,0 +1,9 @@
+# PCA representation for the 70k cardiovascular dataset.
+#
+# PCA is fitted inside each training fold. No global PCA fit is permitted.
+
+features:
+  set: all
+  reducer: pca
+  n_components: 8
+  log_retained_variance: true

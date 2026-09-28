@@ -1,0 +1,9 @@
+# The UNMATCHED neural baseline: roughly 1,200 parameters against the circuit's 96.
+# Reported precisely because it is not matched. It answers "what does unlimited
+# classical capacity achieve?" while control_c answers "what does EQUAL capacity
+# achieve?". Two different questions; both belong in the table.
+model:
+  name: mlp
+  params:
+    hidden_layer_sizes: [32, 16]
+    early_stopping: true

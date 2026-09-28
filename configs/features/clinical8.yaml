@@ -1,0 +1,15 @@
+# Eight compact clinical features selected from the 70k cardiovascular dataset.
+#
+# Selection is NOT performed globally. The selector is fitted independently
+# inside each training fold using mutual information plus a redundancy penalty.
+#
+# The selected representation is therefore leakage-safe.
+
+features:
+  set: cardio_compact8
+  reducer: none
+
+  selector:
+    method: mi_mrmr
+    k: 8
+    redundancy_penalty: 0.5

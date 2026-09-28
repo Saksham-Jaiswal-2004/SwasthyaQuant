@@ -1,0 +1,7 @@
+# The honest floor. If nothing beats this on 918 tabular rows, the finding is that the
+# problem is close to linear -- which is worth reporting rather than hiding.
+model:
+  name: logreg
+  params:
+    C: 1.0
+    class_weight: balanced

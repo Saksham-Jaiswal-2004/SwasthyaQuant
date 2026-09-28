@@ -1,0 +1,9 @@
+# The direct classical counterpart to the quantum kernel: same SVC, same C, only the
+# kernel differs. Keeps the quantum-vs-classical kernel comparison a one-variable
+# change instead of two different models.
+model:
+  name: svm_rbf
+  params:
+    C: 1.0
+    gamma: scale
+    class_weight: balanced

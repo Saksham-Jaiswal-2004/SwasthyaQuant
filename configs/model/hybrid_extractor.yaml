@@ -1,0 +1,20 @@
+# Quantum feature extractor + shared classical head (the HQF-CC pattern from P1).
+#
+# trainable: false by default, and that is the stronger experiment rather than a
+# shortcut. A FIXED random circuit against a FIXED random classical projection of equal
+# size holds training constant at zero on both sides, so the only difference left is
+# the nature of the feature space. Run trainable: true as a second condition.
+#
+# head_factory must be IDENTICAL to control_c's. If the heads differ, the experiment
+# measures the heads.
+model:
+  name: hybrid_extractor
+  params:
+    n_features: 8
+    depth: 6
+    trainable: false
+    entangler: ring
+  head:
+    kind: logistic_regression
+    max_iter: 2000
+    note: no hidden capacity, so whatever separates the classes came from the layer in front

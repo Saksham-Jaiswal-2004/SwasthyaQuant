@@ -1,0 +1,14 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      # Core deps only. CI must never need the dataset or the quantum stack:
+      # tests marked quantum/needs_data skip themselves, so CI stays fast and green.
+      - run: pip install -r requirements-dev.txt && pip install -e .
+      - run: ruff check src tests
+      - run: pytest
