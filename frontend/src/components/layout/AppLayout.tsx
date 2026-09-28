@@ -1,11 +1,10 @@
-import { Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { Menu, PanelLeftClose, PanelLeftOpen, Plus } from 'lucide-react'
 import { Suspense, useEffect, useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { DEMO_MODE } from '../../config'
 import { cx } from '../../lib/format'
 import { LoadingState } from '../ui/primitives'
 import { Brand } from './Brand'
-import { NAV_GROUPS } from './nav'
 import { ServiceStatusPill } from './ServiceStatusPill'
 import { MobileDrawer, Sidebar } from './Sidebar'
 
@@ -28,7 +27,6 @@ export function AppLayout() {
 
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
 
-  const current = NAV_GROUPS.flatMap((g) => g.items).find((i) => (i.end ? pathname === i.to : pathname.startsWith(i.to)))
 
   return (
     <div className="min-h-dvh">
@@ -45,14 +43,14 @@ export function AppLayout() {
             {collapsed ? <PanelLeftOpen className="size-[18px]" aria-hidden /> : <PanelLeftClose className="size-[18px]" aria-hidden />}
           </button>
           <Link to="/" className="md:hidden"><Brand compact /></Link>
-          <div className="hidden min-w-0 items-center gap-2 text-sm sm:flex">
-            <span className="text-ink-3">Swasthya Quant</span>
-            <span className="text-slate-300">/</span>
-            <span className="truncate font-medium text-navy-900">{current?.label ?? 'Workspace'}</span>
-          </div>
           <div className="ml-auto flex items-center gap-2">
             {DEMO_MODE && <span className="hidden rounded-full bg-warn-bg px-2.5 py-1 text-xs font-semibold text-warn ring-1 ring-inset ring-warn/30 sm:inline">Demo mode on</span>}
             <ServiceStatusPill />
+            {pathname !== '/' && (
+              <Link to="/" className="hidden h-8 items-center gap-1.5 rounded-lg bg-navy-900 px-3 text-xs font-semibold text-white hover:bg-navy-800 sm:inline-flex">
+                <Plus className="size-3.5" aria-hidden /> New assessment
+              </Link>
+            )}
           </div>
         </header>
 

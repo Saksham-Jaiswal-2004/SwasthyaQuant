@@ -1,29 +1,21 @@
-import { Atom, BarChart3, BookOpenText, ClipboardPlus, History, Info, LayoutDashboard, Lightbulb, type LucideIcon } from 'lucide-react'
+import { Atom, BarChart3, HeartPulse, History, Lightbulb, type LucideIcon } from 'lucide-react'
 
-export interface NavItem { to: string; label: string; icon: LucideIcon; end?: boolean }
+export interface NavItem { to: string; label: string; icon: LucideIcon; end?: boolean; description: string }
 
 export const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
-    title: 'Clinical',
+    title: 'Assess',
     items: [
-      { to: '/app', label: 'Overview', icon: LayoutDashboard, end: true },
-      { to: '/app/assess', label: 'Disease Assessment', icon: ClipboardPlus },
-      { to: '/app/history', label: 'Prediction History', icon: History },
+      { to: '/', label: 'Risk Assessment', icon: HeartPulse, end: true, description: 'Estimate cardiovascular risk for a patient' },
+      { to: '/history', label: 'History', icon: History, description: 'Previous assessments' },
     ],
   },
   {
-    title: 'Research',
+    title: 'Model',
     items: [
-      { to: '/app/explain', label: 'Explainability', icon: Lightbulb },
-      { to: '/app/benchmarks', label: 'Benchmarks', icon: BarChart3 },
-      { to: '/app/quantum', label: 'Quantum Hardware', icon: Atom },
-    ],
-  },
-  {
-    title: 'Project',
-    items: [
-      { to: '/app/methodology', label: 'Methodology', icon: BookOpenText },
-      { to: '/app/about', label: 'About', icon: Info },
+      { to: '/insights', label: 'Insights', icon: Lightbulb, description: 'What drives the prediction' },
+      { to: '/performance', label: 'Model Performance', icon: BarChart3, description: 'Accuracy across models' },
+      { to: '/quantum', label: 'Quantum Engine', icon: Atom, description: 'The quantum feature layer' },
     ],
   },
 ]

@@ -14,7 +14,8 @@ const kindStyle: Record<PipelineStage['kind'], { box: string; icon: string; tag:
  * Pipeline flow. Horizontal on wide screens, vertical on narrow ones. `activeIndex`
  * highlights progress only when the caller has real progress to show.
  */
-export function ModelPipeline({ stages = SERVED_PIPELINE, orientation = 'auto', compact, activeIndex }: { stages?: PipelineStage[]; orientation?: 'auto' | 'vertical'; compact?: boolean; activeIndex?: number }) {
+export function ModelPipeline({ stages = SERVED_PIPELINE, orientation = 'auto', compact, activeIndex }: { stages?: PipelineStage[]; orientation?: 'auto' | 'vertical' | 'grid'; compact?: boolean; activeIndex?: number }) {
+  if (orientation === 'grid') return <PipelineGrid stages={stages} />
   const horizontal = orientation === 'auto'
   return (
     <ol
@@ -67,5 +68,25 @@ export function PipelineLegend() {
       <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-sm border border-teal-600/30 bg-teal-100" /> Quantum stage</span>
       <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-sm bg-navy-900" /> Model output</span>
     </div>
+  )
+}
+
+/** Numbered, wrapping grid of stages. Fits any container width without clipping labels. */
+function PipelineGrid({ stages }: { stages: PipelineStage[] }) {
+  return (
+    <ol aria-label="Model pipeline" className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {stages.map((s, i) => {
+        const st = kindStyle[s.kind]
+        return (
+          <li key={s.id} className={cx('flex min-w-0 items-center gap-2.5 rounded-lg border px-3 py-2', st.box)}>
+            <span className={cx('grid size-7 shrink-0 place-items-center rounded-md', st.icon)}><s.icon className="size-3.5" aria-hidden /></span>
+            <span className="min-w-0">
+              <span className={cx('block text-[10px] font-semibold tabular', s.kind === 'output' ? 'text-slate-400' : 'text-ink-3')}>STEP {i + 1}</span>
+              <span className={cx('block truncate text-[13px] font-semibold', s.kind === 'output' ? 'text-white' : 'text-navy-900')}>{s.title}</span>
+            </span>
+          </li>
+        )
+      })}
+    </ol>
   )
 }

@@ -1,7 +1,7 @@
 import { Atom, Cpu, FlaskConical, LineChart, Radio, Waves } from 'lucide-react'
 import { DcqfAblationChart } from '../components/charts/DcqfAblationChart'
 import { QuantumCircuitVisualization } from '../components/quantum/QuantumCircuitVisualization'
-import { Callout, Card, CardHeader, EmptyState, PageHeader, SourceNote, StatusBadge } from '../components/ui/primitives'
+import { Callout, Card, CardHeader, EmptyState, PageHeader, StatusBadge } from '../components/ui/primitives'
 import { DCQF_CONFIG, DCQF_NULL_TEST, NOISE_SPEC, SHOT_GRID, VQC_CONFIG } from '../data/research'
 import { cx } from '../lib/format'
 
@@ -12,10 +12,10 @@ const REGIMES: { key: string; title: string; note: string }[] = [
 ]
 
 const MODES = [
-  { icon: Cpu, name: 'Ideal simulation', status: 'In use', tone: 'good' as const, spec: 'Exact statevector (shots = None)', detail: 'Configuration served by the backend DCQF extractor.' },
-  { icon: Radio, name: 'Finite-shot sampling', status: 'Configured', tone: 'info' as const, spec: `Shot grid ${SHOT_GRID[0]}–${SHOT_GRID[SHOT_GRID.length - 1].toLocaleString()} (${SHOT_GRID.length} log-spaced points)`, detail: 'degradation_curve() in quantum/noise.py' },
-  { icon: Waves, name: 'Synthetic noise (Aer)', status: 'Configured', tone: 'info' as const, spec: `Depolarising 1q ${NOISE_SPEC.p1q} · 2q ${NOISE_SPEC.p2q} · readout ${NOISE_SPEC.pReadout}`, detail: `NoiseSpec "${NOISE_SPEC.label}"` },
-  { icon: Atom, name: 'IBM Quantum hardware', status: 'Not run', tone: 'pending' as const, spec: 'qiskit-ibm-runtime sampler', detail: 'runtime_sampler() in quantum/noise.py; needs IBM_QUANTUM_TOKEN' },
+  { icon: Cpu, name: 'Ideal simulation', status: 'In use', tone: 'good' as const, spec: 'Exact statevector simulation', detail: 'Powers every assessment today.' },
+  { icon: Radio, name: 'Finite-shot sampling', status: 'Planned', tone: 'pending' as const, spec: `${SHOT_GRID[0]}–${SHOT_GRID[SHOT_GRID.length - 1].toLocaleString()} shots, ${SHOT_GRID.length} levels`, detail: 'Tests stability under measurement noise.' },
+  { icon: Waves, name: 'Noisy simulation', status: 'Planned', tone: 'pending' as const, spec: `Gate error 1q ${NOISE_SPEC.p1q} · 2q ${NOISE_SPEC.p2q} · readout ${NOISE_SPEC.pReadout}`, detail: 'Pessimistic small-device calibration.' },
+  { icon: Atom, name: 'IBM Quantum hardware', status: 'Planned', tone: 'pending' as const, spec: 'IBM Quantum Runtime', detail: 'Validation on a real quantum processor.' },
 ]
 
 export function QuantumPage() {
@@ -23,9 +23,8 @@ export function QuantumPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Quantum Hardware"
-        title="Quantum layer and hardware readiness"
-        description="The circuit the backend runs, the execution modes the codebase defines for testing robustness to noise, and the ablation that tests whether the quantum step contributes."
+        title="Quantum Engine"
+        description="The quantum feature layer inside every assessment, how it runs, and how it is validated."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -44,7 +43,7 @@ export function QuantumPage() {
       </div>
 
       <Card className="mt-5">
-        <CardHeader title="Quantum workflow" subtitle="Digitized counterdiabatic quantum feature extraction (DCQF)" icon={<Atom className="size-4" aria-hidden />} />
+        <CardHeader title="Quantum circuit" subtitle="Digitized counterdiabatic quantum feature extraction (DCQF)" icon={<Atom className="size-4" aria-hidden />} />
         <div className="p-5">
           <ol className="mb-4 grid gap-2 text-xs sm:grid-cols-3 lg:grid-cols-6" aria-label="Quantum workflow stages">
             {['Classical input (8 angles)', 'Feature encoding', `${DCQF_CONFIG.qubits}-qubit register`, 'Counterdiabatic circuit', 'Z-basis measurement', 'Classical classifier'].map((s, i) => (
@@ -58,7 +57,7 @@ export function QuantumPage() {
       </Card>
 
       <Card className="mt-5">
-        <CardHeader title="Execution modes" subtitle="Simulator → noisy simulator → hardware, in that order (quantum/noise.py)" icon={<Cpu className="size-4" aria-hidden />} />
+        <CardHeader title="Execution modes" subtitle="From exact simulation to real quantum hardware" icon={<Cpu className="size-4" aria-hidden />} />
         <div className="grid gap-px overflow-hidden bg-line sm:grid-cols-2 xl:grid-cols-4">
           {MODES.map((m) => (
             <div key={m.name} className="bg-surface p-5">
@@ -77,15 +76,14 @@ export function QuantumPage() {
       <Card className="mt-5">
         <CardHeader title="Noise degradation benchmark" subtitle="Metric against shot count and two-qubit error rate" icon={<LineChart className="size-4" aria-hidden />} />
         <EmptyState icon={<LineChart className="size-5" aria-hidden />} title="Noise benchmark results are not available yet">
-          Ideal, noisy-simulator and hardware runs have not been written to <span className="font-mono">results/runs/</span>.
-          Accuracy, recall, circuit depth and execution time for each mode will appear here once they have.
+          Accuracy, recall, circuit depth and execution time under noise will appear here once noisy-simulation and hardware runs complete.
         </EmptyState>
       </Card>
 
       <Card className="mt-5">
         <CardHeader
-          title="Does the quantum step contribute? DCQF ablation"
-          subtitle={`AUC per feature set on synthetic data · n = ${cfg.n}, ${cfg.seeds} seeds × ${cfg.folds} folds, one shared logistic head`}
+          title="Quantum feature validation"
+          subtitle={`Does the quantum layer add signal beyond classical controls? Controlled test on synthetic data (n = ${cfg.n}, ${cfg.seeds} seeds × ${cfg.folds} folds)`}
           icon={<FlaskConical className="size-4" aria-hidden />}
         />
         <div className="space-y-5 p-5">
@@ -101,7 +99,7 @@ export function QuantumPage() {
             ))}
           </div>
           <div className="flex flex-wrap gap-4 text-xs text-ink-3">
-            <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-sm bg-[#0d9488]" /> DCQF arm</span>
+            <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-sm bg-[#0d9488]" /> Quantum features (DCQF)</span>
             <span className="inline-flex items-center gap-1.5"><span className="size-2.5 rounded-sm bg-[#2f5ea8]" /> Raw features or controls</span>
             <span>Whiskers: ± 1 sd across folds</span>
           </div>
@@ -109,16 +107,15 @@ export function QuantumPage() {
           <AblationTable />
 
           <Callout tone="info" title="What this shows">
-            DCQF did not beat its scrambled null (couplings permuted off their variables) in any regime, and the classical chain-product
-            control matched or beat it. Its apparent gain over raw features comes from expanding 8 columns into 24. The platform reports
-            this openly. The test is limited: synthetic data, 4 seeds, and small effects would go undetected (docs/DCQF_FINDINGS.md).
+            In this test the quantum features did not outperform a scrambled version of themselves, and a classical control of the same
+            size matched or beat them. Their gain over raw features came from adding more columns. We report this openly and keep testing:
+            the experiment uses synthetic data and 4 seeds, so small effects could go undetected.
           </Callout>
-          <SourceNote>results/runs/dcqf_null_test.json</SourceNote>
         </div>
       </Card>
 
       <Card className="mt-5">
-        <CardHeader title="Other quantum research arms" subtitle="Defined in configs/model; no ledger rows yet" icon={<Atom className="size-4" aria-hidden />} />
+        <CardHeader title="More quantum models" subtitle="In development" icon={<Atom className="size-4" aria-hidden />} />
         <dl className="grid gap-px overflow-hidden bg-line sm:grid-cols-3">
           {[
             ['Variational Quantum Classifier', `${VQC_CONFIG.qubits} qubits · depth ${VQC_CONFIG.depth} · ${VQC_CONFIG.trainableAngles} angles + ${VQC_CONFIG.bias} bias · ${VQC_CONFIG.entangler} entangler. Parameter-shift cost: ${VQC_CONFIG.paramShiftEvalsPerStep} circuit evaluations per step per sample.`],
@@ -126,7 +123,7 @@ export function QuantumPage() {
             ['Quantum extractor + head', 'Fixed random 4-qubit circuit (depth 6) feeding a logistic head; compared against a parameter-matched classical projection.'],
           ].map(([k, v]) => (
             <div key={k} className="bg-surface p-5">
-              <dt className="flex items-center justify-between gap-2 font-semibold text-navy-900">{k} <StatusBadge tone="pending">Awaiting run</StatusBadge></dt>
+              <dt className="flex items-center justify-between gap-2 font-semibold text-navy-900">{k} <StatusBadge tone="pending">In development</StatusBadge></dt>
               <dd className="mt-1 text-sm text-ink-2">{v}</dd>
             </div>
           ))}

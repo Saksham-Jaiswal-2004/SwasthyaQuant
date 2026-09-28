@@ -20,3 +20,12 @@ export const SERVED_PIPELINE: PipelineStage[] = [
   { id: 'clf', title: 'Hybrid classifier', detail: 'Gradient Boosting', kind: 'classical', icon: Brain },
   { id: 'risk', title: 'Risk estimate', detail: 'P(cardio = 1)', kind: 'output', icon: Gauge },
 ]
+
+/** Condensed five-step view of SERVED_PIPELINE for narrow, product-facing contexts. */
+export const SUMMARY_PIPELINE: PipelineStage[] = [
+  { id: 'input', title: 'Health metrics', detail: '11 routine inputs', kind: 'data', icon: ClipboardList },
+  { id: 'features', title: 'Clinical features', detail: 'Derived and selected (8)', kind: 'classical', icon: Filter },
+  { id: 'quantum', title: 'Quantum encoding', detail: '8-qubit DCQF circuit', kind: 'quantum', icon: Atom },
+  { id: 'clf', title: 'Hybrid classifier', detail: '32 features, gradient boosting', kind: 'classical', icon: Brain },
+  { id: 'risk', title: 'Risk estimate', detail: 'Probability of disease', kind: 'output', icon: Gauge },
+]

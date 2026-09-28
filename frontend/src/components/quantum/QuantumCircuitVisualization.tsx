@@ -108,9 +108,8 @@ export function QuantumCircuitVisualization({ qubits = DCQF_CONFIG.qubits }: { q
         </svg>
       </div>
       <figcaption className="mt-2 text-xs leading-relaxed text-ink-3">
-        Schematic of <span className="font-mono">DCQFExtractor</span> as configured in the backend: {qubits} qubits (one per selected clinical angle), pairwise couplings
-        weighted by mutual information measured on the training fold, a single Trotter step (dt = 1), exact statevector expectations, and {DCQF_CONFIG.trainableQuantumParams} trainable quantum parameters.
-        Output: {DCQF_CONFIG.quantumFeatures} quantum features.
+        {qubits} qubits, one per selected clinical feature. Couplings are weighted by the statistical link between feature pairs, and one counterdiabatic
+        step is applied before measurement. The circuit has {DCQF_CONFIG.trainableQuantumParams} trainable parameters and outputs {DCQF_CONFIG.quantumFeatures} quantum features.
       </figcaption>
     </figure>
   )

@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, CircleDashed, Info, Loader2, RefreshCw, ShieldAlert, XCircle } from 'lucide-react'
+import { AlertOctagon, AlertTriangle, CheckCircle2, CircleDashed, Info, Loader2, RefreshCw, ShieldAlert, XCircle } from 'lucide-react'
 import { useId, useState, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { cx } from '../../lib/format'
 
@@ -55,7 +55,7 @@ const toneClass: Record<Tone, string> = {
 const toneIcon: Record<Tone, ReactNode> = {
   good: <CheckCircle2 className="size-3.5" aria-hidden />,
   warn: <AlertTriangle className="size-3.5" aria-hidden />,
-  risk: <XCircle className="size-3.5" aria-hidden />,
+  risk: <AlertOctagon className="size-3.5" aria-hidden />,
   neutral: null,
   info: <Info className="size-3.5" aria-hidden />,
   pending: <CircleDashed className="size-3.5" aria-hidden />,
@@ -198,9 +198,9 @@ export function SourceNote({ children, className }: { children: ReactNode; class
   return <p className={cx('text-xs text-ink-3', className)}>Source: <span className="font-mono text-[11px]">{children}</span></p>
 }
 
-export function Segmented<T extends string | number>({ value, onChange, options, label, size = 'md' }: { value: T | undefined; onChange: (v: T) => void; options: { value: T; label: string }[]; label: string; size?: 'sm' | 'md' }) {
+export function Segmented<T extends string | number>({ value, onChange, options, label, size = 'md', fullWidth }: { value: T | undefined; onChange: (v: T) => void; options: { value: T; label: string }[]; label: string; size?: 'sm' | 'md'; fullWidth?: boolean }) {
   return (
-    <div role="radiogroup" aria-label={label} className="inline-flex w-full flex-wrap gap-1 rounded-lg bg-slate-100 p-1 sm:w-auto">
+    <div role="radiogroup" aria-label={label} className={cx('inline-flex w-full gap-1 rounded-lg bg-slate-100 p-1', fullWidth ? 'flex' : 'flex-wrap sm:w-auto')}>
       {options.map((o) => {
         const active = o.value === value
         return (
@@ -211,7 +211,8 @@ export function Segmented<T extends string | number>({ value, onChange, options,
             aria-checked={active}
             onClick={() => onChange(o.value)}
             className={cx(
-              'flex-1 whitespace-nowrap rounded-md font-medium transition-colors sm:flex-none',
+              'flex-1 whitespace-nowrap rounded-md font-medium transition-colors',
+              !fullWidth && 'sm:flex-none',
               size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm',
               active ? 'bg-surface text-navy-900 shadow-sm ring-1 ring-line' : 'text-ink-2 hover:text-navy-900',
             )}

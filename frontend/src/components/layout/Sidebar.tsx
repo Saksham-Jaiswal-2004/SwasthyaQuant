@@ -44,9 +44,9 @@ export function SidebarContent({ collapsed, onNavigate }: { collapsed?: boolean;
         ))}
       </div>
       {!collapsed && (
-        <div className="m-3 rounded-lg border border-white/10 bg-white/5 p-3 text-[11.5px] leading-relaxed text-slate-400">
-          Research prototype. Outputs are model-estimated risk, not a medical diagnosis.
-        </div>
+        <p className="border-t border-white/10 px-5 py-4 text-[11px] leading-relaxed text-slate-500">
+          AI-estimated risk. Not a medical diagnosis.
+        </p>
       )}
     </nav>
   )

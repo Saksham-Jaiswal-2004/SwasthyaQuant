@@ -36,7 +36,7 @@ Swasthya Quant is a hybrid quantum-classical machine learning platform for estim
 | DCQF ablation (synthetic data) | **Evaluated**: `results/runs/dcqf_null_test.json`, written up in `docs/DCQF_FINDINGS.md` |
 | FastAPI inference backend (`backend/`) | Implemented. **No trained model artifact is committed**, so `/api/predict` returns 503 |
 | Hybrid model, VQC, quantum kernel, Control-C, noise benchmarks | Configured, **not yet evaluated** (no ledger rows) |
-| Web frontend (`frontend/`) | Implemented (React + TypeScript + Vite) |
+| Web frontend (`frontend/`) | Implemented: product-style React + TypeScript + Vite app |
 | Streamlit prototype (`app/`) | Legacy. References a schema that no longer exists (see [Known issues](#known-issues)) |
 
 ---
@@ -241,17 +241,15 @@ See [Known issues](#known-issues): this endpoint currently returns an empty `mod
 
 ## Web application
 
+The UI is a product-style workspace: a navigation sidebar (collapsible on tablet, a drawer on mobile), a top bar with live service status, and five sections.
+
 | Route | Screen | Data source |
 |---|---|---|
-| `/` | Landing: hero, technology highlights, pipeline | Static facts from repo config |
-| `/app` | Dashboard: service status, served model, dataset, circuit, baseline highlights, recent assessments | `GET /api/health`, ledger |
-| `/app/assess` | Disease Assessment: grouped clinical form with the API's validation ranges, live derived features, result panel | `POST /api/predict` |
-| `/app/history` | Prediction History: past assessments (this browser only) | `localStorage` |
-| `/app/explain` | Explainability: feature attribution (ready for an endpoint), patient-level view, pipeline walkthrough, feature rationale | latest assessment, `features/select.py` |
-| `/app/benchmarks` | Benchmarks: metric switcher, model comparison chart, full mean ± sd table, confusion matrix, ROC placeholder | `GET /api/benchmark` + ledger |
-| `/app/quantum` | Quantum Hardware: DCQF circuit diagram, execution modes, noise benchmark placeholder, DCQF ablation | configs, `quantum/noise.py`, `dcqf_null_test.json` |
-| `/app/methodology` | Data, preprocessing, baselines, quantum layer, hybrid layer, evaluation | docs |
-| `/app/about` | Project, stack, research references | repo |
+| `/` | **Risk Assessment** (home). Patient-profile panel on the left (demographics, body measurements, blood pressure, lab markers, lifestyle switches) with the API's validation ranges. On the right: live health metrics (BMI, blood pressure category, pulse pressure, MAP) and the result card (gauge, verdict, probability bar with decision threshold, how it was computed) | `POST /api/predict` |
+| `/history` | **History**: past assessments saved on this device | `localStorage` |
+| `/insights` | **Insights**: latest assessment, feature contributions (ready for an attribution endpoint), how a prediction is made, what the model looks at | latest assessment, feature rationale |
+| `/performance` | **Model Performance**: metric switcher, model comparison chart, full mean ± sd table, confusion matrix, ROC placeholder | `GET /api/benchmark` + ledger |
+| `/quantum` | **Quantum Engine**: 8-qubit DCQF circuit diagram, execution modes, noise benchmark placeholder, quantum feature validation (ablation) | configs, `dcqf_null_test.json` |
 
 **Data integrity rules the UI follows**
 
@@ -267,7 +265,7 @@ frontend/src/
 ├── components/
 │   ├── layout/       AppLayout, Sidebar (collapsible; drawer on mobile), ServiceStatusPill, Brand
 │   ├── ui/           Card, StatCard, StatusBadge, Loading/Empty/Error states, Disclaimer, Callout, InfoTip, Segmented
-│   ├── clinical/     form fields, PredictionResult
+│   ├── clinical/     form fields (number, segmented, switch), PredictionResult
 │   ├── charts/       RiskGauge, ModelComparisonChart, BenchmarkTable, ConfusionMatrix, FeatureImportanceChart, DcqfAblationChart
 │   └── quantum/      ModelPipeline, QuantumCircuitVisualization
 ├── pages/            one file per route
@@ -340,17 +338,16 @@ These were found during the frontend integration. None were changed, because bac
 
 ## Demo flow (2–3 minutes)
 
-1. **Landing** (`/`): name, tagline, the pipeline from clinical data to risk. Click **Start Disease Assessment**.
-2. **Assessment** (`/app/assess`): the example patient is preloaded. Point out the grouped inputs, the ranges the API enforces, and the live derived features (BMI, pulse pressure, MAP). Click **Analyze Risk**.
-   - With a model artifact: show the gauge, the 0.5 threshold, the backend label, the processing pipeline and the disclaimer.
-   - Without one: show that the platform refuses to invent a number.
-3. **Benchmarks** (`/app/benchmarks`):
+1. **Risk Assessment** (`/`): the sample patient is preloaded. Point out the patient-profile panel, the live health metrics (BMI and blood-pressure category update as you type), and the ranges the API enforces. Click **Analyze Risk**.
+   - With a model artifact: show the gauge, the verdict, the probability bar against the 50% decision threshold, and **How this was computed**.
+   - Without one: show that the product refuses to invent a number.
+2. **Model Performance** (`/performance`):
    - Switch between sensitivity and PR-AUC.
    - Note XGBoost's lead on PR-AUC/ROC-AUC and Random Forest's on sensitivity.
    - Open the confusion matrix.
-   - Point to the hatched rows: the hybrid model is awaiting evaluation, and Control-C is required before any quantum claim.
-4. **Quantum Hardware** (`/app/quantum`): walk the 8-qubit DCQF circuit, then the execution modes from ideal simulation to IBM hardware. Close on the **DCQF ablation**: the platform tested the quantum component against a scrambled null and a classical equivalent, and reports that it did not beat them.
-5. **Explainability / Methodology**: the feature rationale, the SHAP-versus-saliency distinction, and the fold-safe protocol.
+   - Point to the hatched rows: quantum and hybrid models are awaiting evaluation.
+3. **Quantum Engine** (`/quantum`): walk the 8-qubit DCQF circuit, then the execution modes from ideal simulation to IBM hardware. Close on **Quantum feature validation**: the quantum component was tested against a scrambled null and a classical equivalent, and the product reports that it did not beat them.
+4. **Insights** (`/insights`): how a prediction is made, and the clinical factors the model considers.
 
 ---
 

@@ -35,7 +35,7 @@ export const MODEL_CATALOG: ModelInfo[] = [
   { id: 'hybrid_extractor', name: 'Quantum extractor + head', family: 'hybrid', description: 'Fixed random 4-qubit circuit feeding a logistic head (HQF-CC pattern).', config: 'configs/model/hybrid_extractor.yaml' },
   { id: 'vqc_dense', name: 'Variational Quantum Classifier', family: 'quantum', description: '4 qubits, dense angle encoding, depth 6 → 96 trainable angles + 1 bias.', config: 'configs/model/vqc_dense.yaml' },
   { id: 'qkernel_zz', name: 'Quantum kernel (ZZ) + SVC', family: 'quantum', description: 'ZZ fidelity kernel, 4 qubits, 2 reps. O(N²) circuit evaluations.', config: 'configs/model/qkernel_zz.yaml' },
-  { id: 'control_c', name: 'Control-C (parameter-matched)', family: 'control', description: 'Classical control sized from the live circuit (95 / 108 params brackets).', config: 'configs/model/control_c.yaml' },
+  { id: 'control_c', name: 'Parameter-matched control', family: 'control', description: 'Classical control sized from the live circuit (95 / 108 params brackets).', config: 'configs/model/control_c.yaml' },
 ]
 
 export const modelName = (id: string) => MODEL_CATALOG.find((m) => m.id === id)?.name ?? id

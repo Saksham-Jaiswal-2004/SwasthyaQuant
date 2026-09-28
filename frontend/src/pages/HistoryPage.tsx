@@ -15,9 +15,8 @@ export function HistoryPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Prediction History"
-        title="Assessment history"
-        description="Assessments run in this browser. The backend exposes no history endpoint, so nothing is stored server-side."
+        title="History"
+        description="Previous risk assessments, saved on this device."
         actions={history.length > 0 && (
           <Button variant="secondary" size="sm" onClick={() => { if (confirm('Clear all saved assessments from this browser?')) clearHistory() }}>
             <Trash2 className="size-4" aria-hidden /> Clear history
@@ -28,8 +27,8 @@ export function HistoryPage() {
       {history.length === 0 ? (
         <Card>
           <EmptyState icon={<History className="size-5" aria-hidden />} title="No assessments yet"
-            action={<Link to="/app/assess" className="inline-flex h-10 items-center gap-2 rounded-lg bg-navy-900 px-4 text-sm font-medium text-white hover:bg-navy-800"><ClipboardPlus className="size-4" aria-hidden /> Start Disease Assessment</Link>}>
-            Results returned by the model will be listed here.
+            action={<Link to="/" className="inline-flex h-10 items-center gap-2 rounded-lg bg-navy-900 px-4 text-sm font-medium text-white hover:bg-navy-800"><ClipboardPlus className="size-4" aria-hidden /> Start a risk assessment</Link>}>
+            Completed assessments will be listed here.
           </EmptyState>
         </Card>
       ) : (

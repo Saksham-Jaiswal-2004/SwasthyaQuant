@@ -39,7 +39,7 @@ export function BenchmarkTable({ summaries, columns = DEFAULT_COLS, awaiting = [
             <tr key={s.model} className="border-b border-line/70 hover:bg-navy-50/50">
               <th scope="row" className="sticky left-0 bg-surface px-4 py-2.5 text-left font-medium text-navy-900">
                 <span className="block">{modelName(s.model)}</span>
-                <span className="block text-xs font-normal text-ink-3">{s.folds} folds · {s.featureSet}</span>
+                <span className="block text-xs font-normal text-ink-3">{s.folds} validation folds</span>
               </th>
               {columns.map((c) => {
                 const v = s.mean[c]
@@ -60,10 +60,10 @@ export function BenchmarkTable({ summaries, columns = DEFAULT_COLS, awaiting = [
               <tr key={id} className="border-b border-line/70">
                 <th scope="row" className="sticky left-0 bg-surface px-4 py-2.5 text-left font-medium text-ink-2">
                   <span className="block">{info?.name ?? id}</span>
-                  <span className="block text-xs font-normal text-ink-3">{info?.family === 'control' ? 'Parameter-matched control' : 'Quantum / hybrid arm'}</span>
+                  <span className="block text-xs font-normal text-ink-3">{info?.family === 'control' ? 'Classical control' : info?.family === 'hybrid' ? 'Hybrid quantum-classical' : 'Quantum'}</span>
                 </th>
                 <td colSpan={columns.length} className="hatch px-3 py-2.5 text-center">
-                  <StatusBadge tone="pending">Awaiting benchmark: no rows in the ledger yet</StatusBadge>
+                  <StatusBadge tone="pending">Awaiting evaluation</StatusBadge>
                 </td>
               </tr>
             )

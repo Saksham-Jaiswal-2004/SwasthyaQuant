@@ -2,23 +2,15 @@ import { useId, type ReactNode } from 'react'
 import { cx } from '../../lib/format'
 import { InfoTip, Segmented } from '../ui/primitives'
 
-function FieldShell({ id, label, hint, error, required, help, children }: { id: string; label: string; hint?: ReactNode; error?: string; required?: boolean; help?: string; children: ReactNode }) {
+function Label({ htmlFor, id, label, required, help }: { htmlFor?: string; id?: string; label: string; required?: boolean; help?: string }) {
+  const Tag = htmlFor ? 'label' : 'span'
   return (
-    <div className="min-w-0">
-      <div className="mb-1.5 flex items-center gap-1.5">
-        <label htmlFor={id} className="text-sm font-medium text-ink">
-          {label}
-          {required && <span className="ml-0.5 text-risk" aria-hidden>*</span>}
-          {required && <span className="sr-only"> (required)</span>}
-        </label>
-        {help && <InfoTip text={help} label={`About ${label}`} />}
-      </div>
-      {children}
-      {error ? (
-        <p id={`${id}-err`} className="mt-1 text-xs font-medium text-risk" role="alert">{error}</p>
-      ) : hint ? (
-        <p id={`${id}-hint`} className="mt-1 text-xs text-ink-3">{hint}</p>
-      ) : null}
+    <div className="mb-1.5 flex items-center gap-1.5">
+      <Tag htmlFor={htmlFor} id={id} className="text-[13px] font-medium text-ink-2">
+        {label}
+        {required && <span className="sr-only"> (required)</span>}
+      </Tag>
+      {help && <InfoTip text={help} label={`About ${label}`} />}
     </div>
   )
 }
@@ -27,8 +19,10 @@ export function NumberField({ label, value, onChange, unit, min, max, step = 1, 
   label: string; value: number | ''; onChange: (v: number | '') => void; unit: string; min: number; max: number; step?: number; hint?: ReactNode; error?: string; help?: string; required?: boolean
 }) {
   const id = useId()
+  const describedBy = error ? `${id}-err` : hint ? `${id}-hint` : undefined
   return (
-    <FieldShell id={id} label={label} hint={hint ?? `${min}–${max} ${unit}`} error={error} required={required} help={help}>
+    <div className="min-w-0">
+      <Label htmlFor={id} label={label} required={required} help={help} />
       <div className={cx('flex h-10 items-center rounded-lg border bg-surface transition-colors focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-600/15', error ? 'border-risk/60' : 'border-line')}>
         <input
           id={id}
@@ -39,14 +33,20 @@ export function NumberField({ label, value, onChange, unit, min, max, step = 1, 
           step={step}
           required={required}
           value={value}
+          title={`${min}–${max} ${unit}`}
           aria-invalid={!!error}
-          aria-describedby={error ? `${id}-err` : `${id}-hint`}
+          aria-describedby={describedBy}
           onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
           className="h-full w-full min-w-0 rounded-l-lg bg-transparent px-3 text-[15px] text-ink tabular outline-none"
         />
-        <span className="shrink-0 border-l border-line px-3 text-xs font-medium text-ink-3">{unit}</span>
+        <span className="shrink-0 pr-3 text-xs font-medium text-ink-3">{unit}</span>
       </div>
-    </FieldShell>
+      {error ? (
+        <p id={`${id}-err`} className="mt-1 text-xs font-medium text-risk" role="alert">{error}</p>
+      ) : hint ? (
+        <p id={`${id}-hint`} className="mt-1 text-xs text-ink-3">{hint}</p>
+      ) : null}
+    </div>
   )
 }
 
@@ -56,28 +56,44 @@ export function ChoiceField<T extends number>({ label, value, onChange, options,
   const id = useId()
   return (
     <div className="min-w-0">
-      <div className="mb-1.5 flex items-center gap-1.5">
-        <span id={id} className="text-sm font-medium text-ink">{label}<span className="ml-0.5 text-risk" aria-hidden>*</span></span>
-        {help && <InfoTip text={help} label={`About ${label}`} />}
-      </div>
-      <Segmented label={label} value={value} onChange={onChange} options={options} />
+      <Label id={id} label={label} help={help} />
+      <Segmented label={label} value={value} onChange={onChange} options={options} fullWidth />
       {error ? <p className="mt-1 text-xs font-medium text-risk" role="alert">{error}</p> : hint ? <p className="mt-1 text-xs text-ink-3">{hint}</p> : null}
     </div>
   )
 }
 
-export function FieldGroup({ title, description, icon, children }: { title: string; description?: string; icon?: ReactNode; children: ReactNode }) {
+/** Binary yes/no input rendered as an accessible switch row. */
+export function SwitchField({ label, description, checked, onChange }: { label: string; description?: string; checked: boolean; onChange: (v: boolean) => void }) {
+  const id = useId()
   return (
-    <fieldset className="rounded-xl border border-line bg-surface p-5">
-      <legend className="sr-only">{title}</legend>
-      <div className="mb-4 flex items-start gap-3">
-        {icon && <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-navy-50 text-navy-700">{icon}</span>}
-        <div>
-          <p className="text-[15px] font-semibold text-navy-900" aria-hidden>{title}</p>
-          {description && <p className="text-sm text-ink-3">{description}</p>}
-        </div>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">{children}</div>
+    <div className="flex items-center justify-between gap-3 py-2">
+      <span className="min-w-0">
+        <span id={id} className="block text-sm font-medium text-ink">{label}</span>
+        {description && <span className="block text-xs text-ink-3">{description}</span>}
+      </span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-labelledby={id}
+        onClick={() => onChange(!checked)}
+        className={cx('relative h-6 w-11 shrink-0 rounded-full transition-colors', checked ? 'bg-teal-600' : 'bg-slate-300')}
+      >
+        <span className={cx('absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition-transform', checked && 'translate-x-5')} />
+      </button>
+    </div>
+  )
+}
+
+export function PanelSection({ title, icon, children, className }: { title: string; icon?: ReactNode; children: ReactNode; className?: string }) {
+  return (
+    <fieldset className={cx('border-b border-line px-5 py-4 last:border-b-0', className)}>
+      <legend className="float-left mb-3 flex w-full items-center gap-2 text-xs font-semibold uppercase tracking-[0.1em] text-navy-700">
+        {icon}
+        {title}
+      </legend>
+      <div className="clear-both space-y-3.5">{children}</div>
     </fieldset>
   )
 }

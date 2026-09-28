@@ -20,7 +20,7 @@ export function Brand({ inverted, compact }: { inverted?: boolean; compact?: boo
             Swasthya <span className={inverted ? 'text-teal-400' : 'text-teal-600'}>Quant</span>
           </span>
           <span className={cx('block text-[10.5px] font-medium uppercase tracking-[0.14em]', inverted ? 'text-slate-400' : 'text-ink-3')}>
-            Hybrid QML · SIH 26139
+            Cardiac Risk AI
           </span>
         </span>
       )}
