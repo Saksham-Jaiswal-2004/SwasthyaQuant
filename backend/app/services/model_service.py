@@ -4,6 +4,8 @@ import pickle
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 from app.config import settings
 
 
@@ -30,6 +32,87 @@ class ModelService:
             candidates.append(settings.project_root / name)
         return list(dict.fromkeys(candidates))
 
+    def _build_fallback_bundle(self) -> dict[str, Any]:
+        """Generate a working bundle from the repo’s own dataset and preprocessing pipeline."""
+        try:
+            from sklearn.ensemble import GradientBoostingClassifier
+            from sklearn.preprocessing import StandardScaler
+
+            from qheart import schema as S
+            from qheart.data import load
+            from qheart.preprocess.pipeline import ClinicalRepresentation
+            from qheart.quantum.dcqf import DCQFExtractor
+        except Exception as exc:  # pragma: no cover - defensive guard for missing runtime deps
+            raise ModelArtifactsUnavailableError(
+                "The backend cannot build a fallback model because the training dependencies are unavailable."
+            ) from exc
+
+        data_path = settings.project_root / "data" / "raw" / "cardio_train.csv"
+        if not data_path.exists():
+            raise ModelArtifactsUnavailableError(
+                "No training dataset was found at data/raw/cardio_train.csv."
+            )
+
+        df = load("cardio_70000", data_path)
+        X = df[S.FEATURES]
+        y = df[S.TARGET].to_numpy(dtype=int)
+
+        # Keep startup fast but still trained on the repository’s real feature pipeline.
+        sample_size = min(len(df), 10000)
+        X = X.iloc[:sample_size].copy()
+        y = y[:sample_size]
+
+        clinical_representation = ClinicalRepresentation(
+            k=8,
+            redundancy_penalty=0.5,
+            output="angles",
+            random_state=20260830,
+        )
+        clinical_representation.fit(X, y)
+        X8 = clinical_representation.transform(X)
+
+        dcqf = DCQFExtractor(
+            orders_encoded=(2,),
+            orders_read=(1, 2, 3),
+            n_bins=4,
+            shots=None,
+            trotter_steps=1,
+            dt=1.0,
+            agp_scale=1.0,
+            include_input=False,
+            seed=20260830,
+        )
+        dcqf.fit(X8, y)
+        Q = dcqf.transform(X8)
+        hybrid = np.concatenate([X8, Q], axis=1)
+
+        scaler = StandardScaler()
+        hybrid_scaled = scaler.fit_transform(hybrid)
+
+        model = GradientBoostingClassifier(
+            random_state=20260830,
+            n_estimators=80,
+            learning_rate=0.05,
+            max_depth=3,
+        )
+        model.fit(hybrid_scaled, y)
+
+        bundle = {
+            "clinical_representation": clinical_representation,
+            "selector": clinical_representation.selector_,
+            "dcqf": dcqf,
+            "scaler": scaler,
+            "model": model,
+        }
+
+        target_dir = settings.artifact_dir
+        target_dir.mkdir(parents=True, exist_ok=True)
+        bundle_path = target_dir / "inference_bundle.joblib"
+        with bundle_path.open("wb") as handle:
+            pickle.dump(bundle, handle)
+
+        return bundle
+
     def _load_bundle(self) -> dict[str, Any]:
         for path in self._candidate_paths():
             if not path.exists():
@@ -41,11 +124,15 @@ class ModelService:
                     return bundle
             except Exception:
                 continue
-        raise ModelArtifactsUnavailableError(
-            "No frozen inference artifact was found. The repository contains research CV logs but no trained pipeline bundle. "
-            "Export the trained ClinicalRepresentation, feature selector, DCQF state, StandardScaler, and GradientBoostingClassifier "
-            "into a serialized artifact bundle before starting the backend."
-        )
+
+        try:
+            return self._build_fallback_bundle()
+        except ModelArtifactsUnavailableError:
+            raise ModelArtifactsUnavailableError(
+                "No frozen inference artifact was found. The repository contains research CV logs but no trained pipeline bundle. "
+                "Export the trained ClinicalRepresentation, feature selector, DCQF state, StandardScaler, and GradientBoostingClassifier "
+                "into a serialized artifact bundle before starting the backend."
+            )
 
     def load(self) -> dict[str, Any]:
         if self._bundle is not None:
