@@ -58,7 +58,8 @@ export function AssessmentPage() {
 
   const set = <K extends keyof PatientInput>(k: K) => (v: PatientInput[K] | '') => {
     setForm((f) => ({ ...f, [k]: v }))
-    setServerErrors((s) => ({ ...s, [k]: undefined }))
+    // Delete (not undefine) the key: an undefined entry would mask the client-side error on merge.
+    setServerErrors(({ [k]: _cleared, ...rest }) => rest)
   }
   const flag = (k: 'smoke' | 'alco' | 'active') => (on: boolean) => set(k)(on ? 1 : 0)
 
@@ -66,7 +67,8 @@ export function AssessmentPage() {
     ev.preventDefault()
     setTouched(true)
     if (errorCount) {
-      document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()
+      // Wait a frame so the error state has rendered before looking for the first invalid field.
+      requestAnimationFrame(() => document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus())
       return
     }
     setSubmit({ state: 'running' })

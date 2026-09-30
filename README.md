@@ -20,6 +20,7 @@ Swasthya Quant is a hybrid quantum-classical machine learning platform for estim
 - [Web application](#web-application)
 - [Research pipeline](#research-pipeline)
 - [Results so far](#results-so-far)
+- [Testing](#testing)
 - [Known issues](#known-issues)
 - [Demo flow](#demo-flow-2-3-minutes)
 - [Scope and limitations](#scope-and-limitations)
@@ -34,7 +35,7 @@ Swasthya Quant is a hybrid quantum-classical machine learning platform for estim
 | Research package `src/qheart` (data, features, quantum circuits, evaluation) | Implemented, with unit tests |
 | Classical baselines (logreg, SVM-RBF, RF, XGBoost, MLP) | **Evaluated**: 5 × 5-fold CV on 70,000 records, in `results/runs/ledger.csv` |
 | DCQF ablation (synthetic data) | **Evaluated**: `results/runs/dcqf_null_test.json`, written up in `docs/DCQF_FINDINGS.md` |
-| FastAPI inference backend (`backend/`) | Implemented. **No trained model artifact is committed**, so `/api/predict` returns 503 |
+| FastAPI inference backend (`backend/`) | Implemented. Serves `backend/artifacts/inference_bundle.joblib` (hybrid DCQF + gradient boosting). This bundle is **not yet evaluated** |
 | Hybrid model, VQC, quantum kernel, Control-C, noise benchmarks | Configured, **not yet evaluated** (no ledger rows) |
 | Web frontend (`frontend/`) | Implemented: product-style React + TypeScript + Vite app |
 | Streamlit prototype (`app/`) | Legacy. References a schema that no longer exists (see [Known issues](#known-issues)) |
@@ -113,7 +114,7 @@ SwasthyaQuant/
 
 ## Quick start
 
-Prerequisites: **Node.js 20+** and **Python 3.10+**.
+Prerequisites: **Node.js 20+** and **Python 3.10–3.12**.
 
 ### 1. Backend (FastAPI)
 
@@ -130,16 +131,24 @@ PYTHONPATH=../src uvicorn app.main:app --reload --port 8000
 
 ```powershell
 cd backend
-python -m venv .venv; .\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-$env:PYTHONPATH = "..\src"; uvicorn app.main:app --reload --port 8000
+# One-time setup. Needs Python 3.10–3.12 (see the note below). With uv installed:
+uv venv --python 3.12 .venv
+uv pip install --python .venv\Scripts\python.exe -r requirements.txt
+# ...or, if Python 3.12 is installed:  py -3.12 -m venv .venv; .venv\Scripts\python -m pip install -r requirements.txt
+
+# Every time:
+$env:PYTHONPATH = "..\src"; .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
 ```
+
+If pip prints `Preparing metadata (pyproject.toml) ... error` for scikit-learn, the venv was created with Python 3.13+. Delete `backend\.venv` and recreate it with one of the commands above.
 
 Swagger UI: <http://localhost:8000/docs>.
 
-`backend/requirements.txt` pins exact versions (e.g. numpy 2.1.2, pandas 2.2.3). On a very recent Python those pins may have no prebuilt wheels. If installation fails, use Python 3.11/3.12, or install the same packages unpinned.
+> **Use the pinned versions, especially `scikit-learn==1.5.2`.** The committed model bundle was saved with scikit-learn 1.5.2, and newer versions cannot unpickle it. Python 3.13+ has no wheels for these pins, so use **Python 3.10–3.12**. If the bundle fails to load, the backend silently trains a fallback model at startup (first 10,000 rows) and **overwrites `backend/artifacts/inference_bundle.joblib`**. If `git status` shows that file modified after starting the backend, your environment is wrong: run `git restore backend/artifacts/inference_bundle.joblib` and reinstall.
+>
+> No Python 3.12? With [uv](https://docs.astral.sh/uv/): `uv venv --python 3.12 .venv` then `uv pip install -r requirements.txt`.
 
-Without a model artifact the API starts, `/api/health` reports `"status": "degraded"`, and `/api/predict` returns **503**. To enable predictions, export a bundle containing `clinical_representation`, `selector`, `dcqf`, `scaler` and `model` to `backend/artifacts/inference_bundle.joblib` (see `backend/README.md`).
+When the model loads, `/api/health` returns `{"status": "ok", "model_loaded": true}`. Without a model, `/api/health` reports `"degraded"` and `/api/predict` returns **503**.
 
 ### 2. Frontend (React)
 
@@ -157,6 +166,7 @@ Other scripts:
 | `npm run preview` | Serve the production build on :4173 (also proxies `/api`) |
 | `npm run typecheck` | TypeScript only |
 | `npm run lint` | oxlint |
+| `npm run test:api` | Frontend ↔ backend integration check (see [Testing](#testing)) |
 
 Frontend environment variables (copy `frontend/.env.example` to `frontend/.env.local`):
 
@@ -323,11 +333,54 @@ DCQF did not beat its own scrambled null in any label regime. The classical chai
 
 ---
 
+## Testing
+
+### 1. Automated integration check (recommended)
+
+With the backend (port 8000) and the frontend dev server (port 5173) both running:
+
+```bash
+cd frontend
+npm run test:api
+```
+
+This sends real requests **through the Vite dev server's `/api` proxy**, the same path the browser uses. It checks every endpoint against the response shapes the UI expects:
+
+| Check | Expected |
+|---|---|
+| Frontend served at `/` | `index.html` loads |
+| `GET /api/health` | `200`, `{status, model_loaded}` |
+| `POST /api/predict` (valid patient) | `200`; `prediction` is 0/1, `risk_probability` in [0, 1], `risk_percentage = round(p × 100)`, prediction consistent with the 0.5 threshold. If no model is loaded, `503` instead |
+| `POST /api/predict` (age 10, systolic < diastolic) | `422`, naming the bad fields |
+| `POST /api/predict` (unknown field / missing field) | `422` |
+| `GET /api/benchmark` | `200`, `{status, models}` |
+
+It prints `PASS`/`FAIL` per check and exits with code 1 on any failure. To test FastAPI directly, bypassing the proxy: `API_URL=http://127.0.0.1:8000 npm run test:api` (PowerShell: `$env:API_URL="http://127.0.0.1:8000"; npm run test:api`).
+
+### 2. Manual test in the browser
+
+Open <http://localhost:5173>, then:
+
+1. **Connection**: the pill in the top-right reads **Model ready** (green). "Model not loaded" (amber) means the API is up without a model. "API offline" (red) means the backend isn't running.
+2. **Higher-risk patient**: keep the sample patient (58 y, female, 170 cm, 78 kg, BP 145/90) and click **Analyze Risk**. Expect about **82%, Higher estimated risk**.
+3. **Lower-risk patient**: set Male, 35 y, 178 cm, 70 kg, BP 115/75. Expect about **15%, Lower estimated risk**.
+4. **Validation**: set Age = 10, or Systolic 80 with Diastolic 95. The fields are highlighted with messages, focus jumps to the first bad field, and **no request is sent** (DevTools → Network).
+5. **History**: open History. Each completed assessment is listed and can be reopened.
+6. **Backend down**: stop Uvicorn. The pill turns to **API offline**, and Analyze Risk shows "Unable to reach the risk engine" instead of a result.
+
+Exact percentages depend on the committed bundle and will change when the model is retrained.
+
+### 3. Backend tests
+
+```bash
+PYTHONPATH=src pytest backend/tests/test_api.py -q
+```
+
 ## Known issues
 
 These were found during the frontend integration. None were changed, because backend and ML code were out of scope for the UI work.
 
-1. **No inference artifact.** `backend/artifacts/` does not exist, so `/api/predict` returns 503. A trained bundle must be exported from the research pipeline.
+1. **The served model is not evaluated.** The committed bundle was trained on the first 10,000 rows (80 trees) with no held-out evaluation, so the UI shows its validated accuracy as "Pending". Its predictions are for demonstrating the pipeline only. The backend also retrains and overwrites the bundle whenever loading fails (see [Quick start](#quick-start)).
 2. **`GET /api/benchmark` returns `"models": {}`.** `backend/app/api/routes/benchmark.py` splits CSV lines on raw commas. Every ledger row has a quoted `config_json` containing commas, so all 137 rows fail its length check and are skipped. Using Python's `csv` module would fix it. Until then, the frontend aggregates the same file with a quote-aware parser and labels the source.
 3. **The benchmark endpoint returns only the latest single fold per model.** The results protocol forbids reporting a single split, so the frontend always aggregates all folds itself.
 4. **Legacy Streamlit app is broken.** `app/streamlit_app.py` reads `S.CATEGORIES["sex"]`, `"chest_pain"` and others from the earlier heart-failure schema. The current schema is the 70k cardiovascular one.
@@ -339,8 +392,8 @@ These were found during the frontend integration. None were changed, because bac
 ## Demo flow (2–3 minutes)
 
 1. **Risk Assessment** (`/`): the sample patient is preloaded. Point out the patient-profile panel, the live health metrics (BMI and blood-pressure category update as you type), and the ranges the API enforces. Click **Analyze Risk**.
-   - With a model artifact: show the gauge, the verdict, the probability bar against the 50% decision threshold, and **How this was computed**.
-   - Without one: show that the product refuses to invent a number.
+   - Show the gauge, the verdict, the probability bar against the 50% decision threshold, and **How this was computed**.
+   - Change the patient to a 35-year-old with BP 115/75 and re-run to show a lower-risk result.
 2. **Model Performance** (`/performance`):
    - Switch between sensitivity and PR-AUC.
    - Note XGBoost's lead on PR-AUC/ROC-AUC and Random Forest's on sensitivity.

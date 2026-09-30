@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "typecheck": "tsc -b",
+    "test:api": "node scripts/check-api.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
