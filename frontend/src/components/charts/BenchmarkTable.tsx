@@ -6,16 +6,18 @@ import { InfoTip, StatusBadge } from '../ui/primitives'
 const DEFAULT_COLS: MetricKey[] = ['sensitivity', 'specificity', 'pr_auc', 'roc_auc', 'f1', 'ppv', 'balanced_accuracy', 'accuracy', 'fit_seconds']
 
 /**
- * mean ± sd per model. Models defined in the repo but absent from the ledger are listed
- * as "Awaiting benchmark" rather than hidden or filled in.
+ * mean ± sd per model. Any model defined in the repo’s catalog but absent from the ledger
+ * is listed as "Awaiting evaluation" rather than hidden or guessed.
  */
-export function BenchmarkTable({ summaries, columns = DEFAULT_COLS, awaiting = ['hybrid_dcqf_gb', 'vqc_dense', 'qkernel_zz', 'control_c'], highlight }: { summaries: ModelSummary[]; columns?: MetricKey[]; awaiting?: string[]; highlight?: MetricKey }) {
+export function BenchmarkTable({ summaries, columns = DEFAULT_COLS, awaiting, highlight }: { summaries: ModelSummary[]; columns?: MetricKey[]; awaiting?: string[]; highlight?: MetricKey }) {
   const best: Partial<Record<MetricKey, number>> = {}
   for (const c of columns) {
     const vals = summaries.map((s) => s.mean[c]).filter((v): v is number => v !== undefined)
     if (vals.length) best[c] = metricDef(c).lowerIsBetter ? Math.min(...vals) : Math.max(...vals)
   }
-  const pending = awaiting.filter((id) => !summaries.some((s) => s.model === id))
+
+  const pendingIds = (awaiting ?? MODEL_CATALOG.map((m) => m.id)).filter((id) => !summaries.some((s) => s.model === id))
+  const pending = pendingIds.filter((id) => MODEL_CATALOG.some((m) => m.id === id))
 
   return (
     <div className="overflow-x-auto">

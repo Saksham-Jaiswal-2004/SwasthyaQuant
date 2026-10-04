@@ -38,7 +38,7 @@ The backend does not recreate these in a simplified form. It validates the reque
 
 ## Model artifact requirement
 
-The repository currently contains research results (`results/runs/ledger.csv`) but no frozen inference bundle. That means the backend intentionally fails loudly if a trained artifact is missing.
+The repository includes a frozen inference bundle at `backend/artifacts/inference_bundle.joblib`. The research benchmark tables are kept separately from the served artifact; the CV metrics shown in the UI are not recomputed at request time.
 
 The expected bundle is a Python pickle or joblib dictionary with at least:
 
@@ -52,7 +52,7 @@ The expected bundle is a Python pickle or joblib dictionary with at least:
 }
 ```
 
-The backend will not silently train a model during startup. If the artifact is absent, `/api/health` reports degraded status and `/api/predict` returns a 503 with the missing-artifact message.
+The backend loads the frozen artifact when available. A development-only fallback can rebuild a small prototype model from the bundled dataset if the artifact is unavailable; that fallback is not a benchmark result and must not be described as the validated 5×5 CV model.
 
 ## API endpoints
 
@@ -116,6 +116,12 @@ From the repository root:
 ```bash
 PYTHONPATH=src pytest backend/tests/test_api.py -q
 ```
+
+## Benchmark vs. deployed inference — do not conflate them
+
+The website's Stage B.2/B.3/B.4 tables are offline research evaluations. They compare representations under the documented group-aware protocols and are not recalculated by the API. The deployed API uses the frozen `backend/artifacts/inference_bundle.joblib` for patient-level inference. Therefore: **benchmark metrics shown in the UI are evidence about the research experiments, not a guarantee that every API prediction reproduces a particular CV fold.**
+
+The current research results do **not** establish quantum advantage: the 5×5 benchmark's classical baseline has ROC-AUC 0.7891 versus 0.7878 for the all-feature hybrid arm. This is intentionally reported as a limitation rather than hidden by the prototype.
 
 ## Why the backend does not retrain on requests
 
