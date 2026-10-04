@@ -2,8 +2,6 @@
 
 **Hybrid Quantum Intelligence for Early Disease Detection**
 
-Smart India Hackathon 2026 · Problem Statement **26139**: *Hybrid Quantum Machine Learning Platform for Early Disease Detection*
-
 Swasthya Quant is a hybrid quantum-classical machine learning platform for estimating cardiovascular disease risk. A quantum feature map, digitized counterdiabatic quantum feature extraction (DCQF), adds quantum-derived features to routine clinical measurements, and a classical classifier turns them into a risk probability. Every model, quantum or classical, is scored by one fold-safe evaluation harness and compared against the classical controls that could explain its result.
 
 > **Not a medical device.** Every output is a model-estimated risk for research and demonstration. It is not a diagnosis, and no model here has been validated for clinical use.
